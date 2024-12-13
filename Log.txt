@@ -1,0 +1,30 @@
+Reminder:
+2. Document Processing
+Use LlamaIndex's SimpleDirectoryReader[Done]
+Support multiple ebook formats (.epub, .pdf)[Done]
+Implement robust text extraction[Done][Could add support for more types in the future]
+Chunk documents for efficient embedding[Done]
+
+3. Embedding Generation
+Use lightweight embedding model (e.g., BAAI/bge-small-en-v1.5)[Done]
+Create vector index for semantic search[Done]
+Implement efficient indexing strategy[Done]
+
+4. Query Engine
+Configure Phi3.5 from Ollama[Using Groq temporiraly due to low local computer ram]
+Implement RAG pipeline[Done]
+Force citation generation
+Handle conversation history
+
+5. Gradio Interface Design
+Create upload/import functionality
+Design query interface with:
+Search input
+Conversation history display
+Source citation display
+Premade prompt examples
+
+6. Additional Features
+Save/export conversation history
+Add documents to library from conversation
+Error handling for document processing
