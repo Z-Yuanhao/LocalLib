@@ -158,17 +158,6 @@ def create_index(full_text, file_name):
             print(f"Error creating index: {str(e)}")
         return f"Error creating index: {str(e)}"
 
-def handle_query(query):
-    """
-    Executes a query against the indexed document.
-    """
-    if query_engine is None:
-        return "No document is loaded. Please upload and process a file first."
-    try:
-        response = query_engine.query(query)
-        return str(response)
-    except Exception as e:
-        return f"Error during query execution: {str(e)}"
 
 
 with gr.Blocks() as interface:
@@ -177,12 +166,19 @@ with gr.Blocks() as interface:
     # File upload and processing
     file_input = gr.File(label="Upload Document")
     file_status = gr.Textbox(label="File Processing Status", interactive=False)
-    
+
+    # Conversation history in chat format
+    conversation_history = gr.Chatbot(label="Conversation History")
+
     # Query interface
-    query_input = gr.Textbox(label="Enter your query")
-    query_button = gr.Button("Submit Query")
-    response_output = gr.Textbox(label="Query Response", interactive=False)
-    
+    query_input = gr.Textbox(
+        label="Enter your query",
+        placeholder="Type your question and press Enter",
+    )
+
+    # Global state for history
+    history = []  # Chat history
+
     # Workflow for file processing
     def workflow(file):
         full_text, status = process_file(file.name)
@@ -190,9 +186,30 @@ with gr.Blocks() as interface:
             index_status = create_index(full_text, file.name)
             return status + "\n" + index_status
         return status
-    
+
+    # Query handling with chat-like history update and clearing input
+    def handle_query_with_chat_history(query):
+        global history
+
+        if query_engine is None:
+            response = "No document is loaded. Please upload and process a file first."
+        else:
+            try:
+                # Pass history as part of context for the LLM
+                conversation_context = "\n".join(
+                    [f"You: {q}\nAI: {r}" for q, r in history]
+                )
+                full_prompt = f"{conversation_context}\nYou: {query}\nAI:"
+                response = str(query_engine.query(full_prompt))
+            except Exception as e:
+                response = f"Error during query execution: {str(e)}"
+        
+        # Update conversation history
+        history.append((query, response))
+        return history, ""  # Return updated history and clear query input
+
     # Gradio actions
     file_input.change(workflow, inputs=[file_input], outputs=[file_status])
-    query_button.click(handle_query, inputs=[query_input], outputs=[response_output])
+    query_input.submit(handle_query_with_chat_history, inputs=[query_input], outputs=[conversation_history, query_input])
 
 interface.launch(share=True)

@@ -14,17 +14,17 @@ Implement efficient indexing strategy[Done]
 Configure Phi3.5 from Ollama[Using Groq temporiraly due to low local computer ram]
 Implement RAG pipeline[Done]
 Force citation generation[To be fixed]
-Handle conversation history
+Handle conversation history[]
 
 5. Gradio Interface Design
-Create upload/import functionality
+Create upload/import functionality[Done]
 Design query interface with:
-Search input
+Search input[Done]
 Conversation history display
-Source citation display
+Source citation display[To be fixed]
 Premade prompt examples
 
 6. Additional Features
 Save/export conversation history
 Add documents to library from conversation
-Error handling for document processing
+Error handling for document processing[Done]
