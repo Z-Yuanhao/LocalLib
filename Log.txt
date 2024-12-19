@@ -13,7 +13,7 @@ Implement efficient indexing strategy[Done]
 4. Query Engine
 Configure Phi3.5 from Ollama[Using Groq temporiraly due to low local computer ram]
 Implement RAG pipeline[Done]
-Force citation generation
+Force citation generation[To be fixed]
 Handle conversation history
 
 5. Gradio Interface Design
