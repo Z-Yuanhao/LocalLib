@@ -11,7 +11,9 @@ from llama_index.core import (
     SimpleDirectoryReader,
     VectorStoreIndex,
 )
-from llama_index.llms.groq import Groq
+#Groq used during dev because of low computer performance
+#from llama_index.llms.groq import Groq
+from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.query_engine import CitationQueryEngine
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
@@ -27,10 +29,11 @@ query_engine = None
 debug = True
 
 # LLM and embedding model initialization
-llm = Groq(
-    model="llama3-groq-70b-8192-tool-use-preview",
-    api_key=os.getenv("GROQ_API_KEY")
-)
+llm = Ollama(model="llama3.2:latest", temperature=0)
+#llm = Groq(
+#    model="llama3-groq-70b-8192-tool-use-preview",
+#    api_key=os.getenv("GROQ_API_KEY")
+#)
 embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 # Settings
@@ -163,6 +166,14 @@ def create_index(full_text, file_name):
 with gr.Blocks() as interface:
     gr.Markdown("# Document Query Interface")
 
+    # Export conversation history
+    def export_history():
+        global history
+        export_content = "\n\n".join([f"You: {q}\nAI: {r}" for q, r in history])
+        return export_content
+
+    export_button = gr.Button("Export Conversation History")
+
     # File upload and processing
     file_input = gr.File(label="Upload Document")
     file_status = gr.Textbox(label="File Processing Status", interactive=False)
@@ -175,6 +186,15 @@ with gr.Blocks() as interface:
         label="Enter your query",
         placeholder="Type your question and press Enter",
     )
+    query_button = gr.Button("Submit Query")
+
+    # Pre-made prompt submission
+    premade_prompts = gr.Dropdown(
+        choices=["Summarize the document.", "What happened in the first two chapters?", "Explain the title."],
+        label="Select a pre-made prompt",
+        interactive=True,
+    )
+    premade_button = gr.Button("Submit Pre-made Prompt")
 
     # Global state for history
     history = []  # Chat history
@@ -208,8 +228,25 @@ with gr.Blocks() as interface:
         history.append((query, response))
         return history, ""  # Return updated history and clear query input
 
+    # Pre-made prompt submission handler
+    def handle_premade_prompt(prompt):
+        if prompt:
+            return handle_query_with_chat_history(prompt)
+        return history, ""
+  
+    def export_history_with_title():
+        global history
+        export_content = "\n\n".join([f"You: {q}\nAI: {r}" for q, r in history])
+        file_path = "conversation_history.txt"  # Set your custom file title here
+        with open(file_path, "w") as f:
+            f.write(export_content)
+        return file_path
+
     # Gradio actions
     file_input.change(workflow, inputs=[file_input], outputs=[file_status])
     query_input.submit(handle_query_with_chat_history, inputs=[query_input], outputs=[conversation_history, query_input])
+    query_button.click(handle_query_with_chat_history, inputs=[query_input], outputs=[conversation_history, query_input])
+    premade_button.click(handle_premade_prompt, inputs=[premade_prompts], outputs=[conversation_history, query_input])
+    export_button.click(export_history_with_title, inputs=[], outputs=[gr.File(label="Download Conversation History")])
 
 interface.launch(share=True)
